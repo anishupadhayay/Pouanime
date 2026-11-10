@@ -1,0 +1,2 @@
+<!-- public/assets/stream-mark.svg — Stream brand play mark -->
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="Stream"><defs><linearGradient id="g" x1="0" x2="1" y1="0" y2="1"><stop stop-color="#ff8945"/><stop offset="1" stop-color="#f04419"/></linearGradient></defs><rect width="64" height="64" rx="20" fill="url(#g)"/><path d="M26 18.5c0-2.3 2.5-3.7 4.5-2.5l18 13.5a3 3 0 0 1 0 4.9l-18 13.6c-2 1.4-4.5 0-4.5-2.4z" fill="#fff"/></svg>

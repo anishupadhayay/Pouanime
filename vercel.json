@@ -1,0 +1,15 @@
+{
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "outputDirectory": "public",
+  "functions": {
+    "api/**/*.js": {
+      "maxDuration": 15
+    }
+  },
+  "routes": [
+    {
+      "src": "/admin/?$",
+      "dest": "/admin/index.html"
+    }
+  ]
+}

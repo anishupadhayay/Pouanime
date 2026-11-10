@@ -1,0 +1,20 @@
+# .gitignore — local secrets, database files, and generated assets
+# Environment and local secrets
+.env
+.env.*
+!.env.example
+
+# Local databases and generated migration output
+local.db
+local.db-shm
+local.db-wal
+data/
+drizzle/
+/stream-anime.zip
+
+# Node tooling
+node_modules/
+npm-debug.log*
+.DS_Store
+.vercel
+coverage/

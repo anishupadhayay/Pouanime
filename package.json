@@ -1,0 +1,30 @@
+{
+  "name": "stream-anime",
+  "version": "1.0.0",
+  "private": true,
+  "description": "A Stream anime catalogue and player powered by AniList and Turso.",
+  "engines": {
+    "node": "22.x"
+  },
+  "scripts": {
+    "dev": "nodemon server/index.js",
+    "start": "node server/index.js",
+    "db:push": "drizzle-kit push",
+    "db:migrate": "node db/migrate.js",
+    "db:seed": "node db/seed.js"
+  },
+  "dependencies": {
+    "@libsql/client": "^0.18.0",
+    "bcryptjs": "^3.0.3",
+    "drizzle-orm": "^0.45.4",
+    "express": "^5.3.0",
+    "express-rate-limit": "^8.7.4",
+    "jsonwebtoken": "^9.0.3",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "dotenv": "^18.0.10",
+    "drizzle-kit": "^0.31.11",
+    "nodemon": "^3.1.14"
+  }
+}
