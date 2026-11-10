@@ -4,13 +4,15 @@ on:
     branches: [main]
   workflow_dispatch:
 permissions:
-  contents: read
+  contents: write
 jobs:
   package:
     if: "!contains(github.event.head_commit.message, '[skip ci]')"
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: true
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -49,11 +51,19 @@ jobs:
               "module.exports = require('../server/index.js');\n"
           )
           PY
-      - name: Install and validate
+      - name: Validate and commit the actual deployment changes
         run: |
+          set -euo pipefail
           npm ci
           find routes server db api -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           node -e "const app=require('./server/index.js'); if (!app || typeof app !== 'function') process.exit(1); console.log('Express app export OK')"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -A
+          if ! git diff --cached --quiet; then
+            git commit -m "[skip ci] Consolidate API into one Vercel function"
+            git push
+          fi
       - name: Create ZIP
         run: |
           zip -qr pouanime.zip . -x '.git/*' 'node_modules/*' '.vercel/*' 'local.db*' '.env'
