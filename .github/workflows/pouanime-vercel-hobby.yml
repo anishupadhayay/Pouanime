@@ -90,14 +90,15 @@ jobs:
         run: |
           set -euo pipefail
           mkdir -p package/pouanime
-          rsync -a ./ package/pouanime/ \
+          rsync -a \
             --exclude='.git' \
             --exclude='node_modules' \
             --exclude='.vercel' \
             --exclude='.env' \
             --exclude='local.db*' \
             --exclude='package' \
-            --exclude='pouanime.zip'
+            --exclude='pouanime.zip' \
+            ./ package/pouanime/
           (cd package && zip -qr ../pouanime.zip pouanime)
 
       - uses: actions/upload-artifact@v4
