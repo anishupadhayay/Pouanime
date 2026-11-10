@@ -45,7 +45,7 @@ jobs:
           s = s.replace(old, new)
           p.write_text(s)
           Path('api').mkdir(exist_ok=True)
-          Path('api/[[...path]].js').write_text(
+          Path('api/[...path].js').write_text(
               "// Single Vercel Serverless Function for all /api/* endpoints.\n"
               "// The Express app preserves the existing route handlers and URLs.\n"
               "module.exports = require('../server/index.js');\n"
