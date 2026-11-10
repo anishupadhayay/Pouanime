@@ -1,32 +1,46 @@
 name: Build Pouanime Vercel Hobby package
+
 on:
   push:
     branches: [main]
   workflow_dispatch:
+
 permissions:
   contents: write
+
 jobs:
   package:
-    if: "!contains(github.event.head_commit.message, '[skip ci]')"
+    if: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[skip ci]') }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
         with:
           persist-credentials: true
+
       - uses: actions/setup-node@v4
         with:
           node-version: 22
           cache: npm
-      - name: Consolidate API routes into one Vercel function
+
+      - name: Ensure one Vercel API function
         shell: bash
         run: |
           set -euo pipefail
-          git mv api routes
+          if [ -f api/health.js ]; then
+            if [ -d routes ]; then
+              echo "Both api source files and routes directory exist; refusing an unsafe move."
+              exit 1
+            fi
+            git mv api routes
+          fi
+
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('server/index.js')
-          s = p.read_text()
-          s = s.replace("../api/", "../routes/")
+
+          server = Path("server/index.js")
+          source = server.read_text()
+          source = source.replace("../api/", "../routes/")
+
           old = """const port = Number(process.env.PORT) || 3000;
           app.listen(port, '0.0.0.0', () => {
             console.log(`Stream is available at http://localhost:${port}`);
@@ -40,23 +54,30 @@ jobs:
           }
           module.exports = app;
           """
-          if old not in s:
-            raise SystemExit('Could not safely locate the local server startup block.')
-          s = s.replace(old, new)
-          p.write_text(s)
-          Path('api').mkdir(exist_ok=True)
-          Path('api/[...path].js').write_text(
+          if "module.exports = app;" not in source:
+            if old not in source:
+              raise SystemExit("Could not safely locate the local server startup block.")
+            source = source.replace(old, new)
+
+          server.write_text(source)
+          Path("api").mkdir(exist_ok=True)
+          handler = Path("api/[...path].js")
+          handler.write_text(
               "// Single Vercel Serverless Function for all /api/* endpoints.\n"
-              "// The Express app preserves the existing route handlers and URLs.\n"
+              "// The Express app preserves the existing API route handlers and URLs.\n"
               "module.exports = require('../server/index.js');\n"
           )
           PY
-      - name: Validate and commit the actual deployment changes
+
+      - name: Install and validate
         run: |
           set -euo pipefail
           npm ci
           find routes server db api -type f -name '*.js' -print0 | xargs -0 -n1 node --check
           node -e "const app=require('./server/index.js'); if (!app || typeof app !== 'function') process.exit(1); console.log('Express app export OK')"
+
+      - name: Commit migration if needed
+        run: |
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add -A
@@ -64,9 +85,21 @@ jobs:
             git commit -m "[skip ci] Consolidate API into one Vercel function"
             git push
           fi
-      - name: Create ZIP
+
+      - name: Create pouanime ZIP
         run: |
-          zip -qr pouanime.zip . -x '.git/*' 'node_modules/*' '.vercel/*' 'local.db*' '.env'
+          set -euo pipefail
+          mkdir -p package/pouanime
+          rsync -a ./ package/pouanime/ \
+            --exclude='.git' \
+            --exclude='node_modules' \
+            --exclude='.vercel' \
+            --exclude='.env' \
+            --exclude='local.db*' \
+            --exclude='package' \
+            --exclude='pouanime.zip'
+          (cd package && zip -qr ../pouanime.zip pouanime)
+
       - uses: actions/upload-artifact@v4
         with:
           name: pouanime
